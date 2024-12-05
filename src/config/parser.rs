@@ -6,6 +6,7 @@ use crate::handler::{file_path, FileType};
 use crate::models::parser_models::{AggregatorConfig, RateLimiter, Style};
 use log::LevelFilter;
 use mlua::Lua;
+use reqwest::Proxy;
 use std::{collections::HashMap, fs, thread::available_parallelism};
 
 /// A named struct which stores the parsed config file options.
@@ -48,8 +49,12 @@ pub struct Config {
     pub tcp_connection_keep_alive: u8,
     /// It stores the pool idle connection timeout in seconds.
     pub pool_idle_connection_timeout: u8,
+    /// Url of the proxy to use for outgoing requests.
+    pub proxy: Option<Proxy>,
     /// It stores the number of https connections to keep in the pool.
     pub number_of_https_connections: u8,
+    /// It stores the operating system's TLS certificates for https requests.
+    pub operating_system_tls_certificates: bool,
 }
 
 impl Config {
@@ -120,7 +125,17 @@ impl Config {
             _ => parsed_cet,
         };
 
+        let proxy_opt = globals.get::<_, Option<String>>("proxy")?;
+        let proxy = proxy_opt.and_then(|proxy_str| {
+            Proxy::all(proxy_str).ok().and_then(|_| {
+                log::error!("Invalid proxy url, defaulting to no proxy.");
+                None
+            })
+        });
+
         Ok(Config {
+            operating_system_tls_certificates: globals
+                .get::<_, bool>("operating_system_tls_certificates")?,
             port: globals.get::<_, u16>("port")?,
             binding_ip: globals.get::<_, String>("binding_ip")?,
             style: Style::new(
@@ -151,6 +166,7 @@ impl Config {
             safe_search,
             #[cfg(any(feature = "redis-cache", feature = "memory-cache"))]
             cache_expiry_time,
+            proxy,
         })
     }
 }

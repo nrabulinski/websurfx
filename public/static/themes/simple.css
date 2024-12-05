@@ -73,6 +73,11 @@ button {
   font-size: 1.6rem;
 }
 
+.search_bar input::-webkit-search-results-button,
+.search_bar input::-webkit-search-cancel-button{
+    display: none;
+}
+
 .search_bar input:focus {
   outline: 2px solid var(--foreground-color);
 }
@@ -443,7 +448,7 @@ footer div {
   align-items: center;
 }
 
-.page_navigation button {
+.page_navigation a {
   background: var(--background-color);
   color: var(--foreground-color);
   padding: 1rem;
@@ -452,7 +457,7 @@ footer div {
   border: none;
 }
 
-.page_navigation button:active {
+.page_navigation a:active {
   filter: brightness(1.2);
 }
 
